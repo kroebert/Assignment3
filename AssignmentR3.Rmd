@@ -1,0 +1,111 @@
+---
+title: "AssignmentR_3"
+author: "Tabea"
+date: "2 November 2018"
+output: html_document
+---
+# 2
+```{r}
+rna_counts <- read.csv("C:/Users/Tabea/Downloads/eXpress_dm_counts.csv", row.names = 1, sep = ",", header = TRUE)
+
+mean_expr <- function(x, log = FALSE) {
+       if(log) {
+               mean(x)} else {
+                   z <- x + 0.0001
+                   mean(log2(z))
+                   }
+       }
+
+#> mean_expr(rna_counts[, 5])
+# [1] 8.972111
+#> mean_expr(rna_counts[, 5], log = TRUE)
+# [1] 2105.712
+#> mean_expr(rna_counts[, 22])
+# [1] 8.348475
+#> mean_expr(rna_counts[, 22], log = TRUE)
+# [1] 2081.889
+#> mean_expr(rna_counts[, 6])
+# [1] 8.025615
+```
+
+#3
+```{r}
+for(i in 1:ncol(rna_counts)) {
+        mean_cols[i] <- mean_expr(rna_counts[, i])
+        names(mean_cols) <- c(names(rna_counts[-1]))
+    }
+
+
+for(i in 1:ncol(rna_counts)) {
+        mean_cols_log2[i] <- mean_expr(rna_counts[, i], log = TRUE)
+        names(mean_cols_log2) <- c(names(rna_counts[-1]))
+    }
+
+sort(mean_cols, decreasing = TRUE)
+
+#The female's wings and their horns have the highest mean.
+```
+
+
+#4
+```{r}
+time.lapply <- system.time(lapply(rna_counts[-1], mean_expr))
+
+#> time.lapply
+#       User      System verstrichen 
+#       0.03        0.00        0.03 
+
+time.mean <- system.time(for(i in 2:ncol(rna_counts)) {
+       mean_cols_log2[i] <- mean_expr(rna_counts[, i], log = TRUE)
+   })
+
+#> time.mean
+       User      System verstrichen 
+       0.01        0.00        0.01 
+       
+#The loop works faster.
+```
+
+#5
+```{r}
+mean_easy <- colMeans(rna_counts[-1])
+```
+
+
+#6
+```{r}
+mean_rows <- rowMeans(rna_counts)
+```
+
+#7
+```{r}
+mean_lg_male_hdhorn <- rowMeans(rna_counts[ ,
+grep("M*_lg_male_hdhorn", names(rna_counts), value = TRUE)])
+
+mean_sm_male_hdhorn <- rowMeans(rna_counts[ , grep("M*_sm_male_hdhorn", names(rna_counts), value = TRUE)])
+
+difference_hdhorns <- mean_lg_male_hdhorn - mean_sm_male_hdhorn
+```
+
+#8
+```{r}
+ggplot(rna_counts, aes(x = mean_lg_male_hdhorn + mean_sm_male_hdhorn, y = difference_hdhorns)) + geom_point()
+
+mean_lg_male_hdhorn_log2 <- log2(mean_lg_male_hdhorn)
+mean_sm_male_hdhorn_log2 <- log2(mean_sm_male_hdhorn)
+difference_hdhorns_log2 <- mean_lg_male_hdhorn_log2 - mean_sm_male_hdhorn_log2
+
+ggplot(rna_counts, aes(x = mean_lg_male_hdhorn_log2 + mean_sm_male_hdhorn_log2, y = difference_hdhorns_log2)) + geom_point()
+```
+
+#Bonus
+#(Just one of the things I tried that didn't work)
+```{r}
+rna_counts %>% select(colnames(rna_counts[ , ends_with("lg_male_hdhorn")])) %>% summarise(mean_Hdhorn_lgmale = rowMeans(rna_counts["FBpp*", ]))
+
+rna_counts %>% select(colnames(rna_counts[ , ends_with("sm_male_hdhorn")])) %>% summarise(mean_Hdhorn_smmale = rowMeans(rna_counts["FBpp*", ]))
+
+diff <- mean_Hdhorn_lgmale - mean_Hdhorn_smmale
+
+ggplot(rna_counts, aes(x = mean_lgMaleHdhorn+mean_smMaleHdhorn, y = diff)) + geom_point()
+```
